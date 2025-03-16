@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WPM Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f9fc;
+            margin: 0;
+        }
+        #container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            width: 400px;
+        }
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #prompt {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        #wpm {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 20px 0;
+        }
+        #resetBtn {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #resetBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <h1>WPM Calculator</h1>
+    <div id="prompt">Please type the following text:</div>
+    <textarea id="inputText" placeholder="Start typing..." rows="6" cols="40"></textarea>
+    <div id="wpm">WPM: 0</div>
+    <button id="resetBtn">Reset</button>
+</div>
+
+<script>
+    let startTime;
+    let wordCount = 0;
+    let lastWpm = 0;
+    let lastSpokenTime = 0;
+    const cooldownPeriod = 2000;
+    let lastMessage = null;
+
+    const inputText = document.getElementById("inputText");
+    const wpmDisplay = document.getElementById("wpm");
+    const resetBtn = document.getElementById("resetBtn");
+    const prompt = document.getElementById("prompt");
+
+    const messages = [
+        "Great job! Keep going!",
+        "You're doing amazing!",
+        "Keep typing to improve your speed!",
+        "Fantastic speed, keep it up!",
+        "Good Job Idiot",
+        "1",
+        "2",
+        "3"
+    ];
+
+    const audioFiles = {
+        "Great job! Keep going!": "Meghana.mp3",
+        "You're doing amazing!": "Rohan.mp3",
+        "Keep typing to improve your speed!": "Mahnove.mp3",
+        "Fantastic speed, keep it up!": "James.mp3",
+        "Good Job Idiot": "Guy.mp3",
+        "1": "Kristen.mp3",
+        "2": "Shayis.mp3",
+        "3": "Zach Latta.mp3"
+    };
+
+    let playedMessages = [];
+
+    const sampleText = "In the heart of the dense forest, where sunlight barely penetrates through the thick canopy, a small village thrives quietly, nestled beside a winding river. The people of the village live in harmony with nature, their lives intertwined with the rhythms of the land. Farmers tend to their crops, while artisans craft intricate pieces of wood and clay. The air is thick with the sounds of chirping birds and rustling leaves, a constant reminder of the vibrant life surrounding them. Yet, amidst this serene setting, a mystery lingers in the shadows. Whispers of an ancient artifact buried deep within the forest’s core have circulated for generations. Some say it holds immense power, while others claim it is a curse. Despite the warnings, adventurers have begun to venture into the depths of the forest, drawn by the allure of the unknown and the promise of untold riches."; 
+
+    prompt.textContent = `Please type the following text: "${sampleText}"`;
+
+    inputText.addEventListener("input", calculateWpm);
+    resetBtn.addEventListener("click", reset);
+
+    function calculateWpm() {
+        const text = inputText.value.trim();
+        wordCount = text.split(/\s+/).filter(Boolean).length;
+
+        if (!startTime && text.length > 0) {
+            startTime = Date.now();
+        }
+
+        if (startTime) {
+            const elapsedTimeInSeconds = (Date.now() - startTime) / 1000;
+            let wpm = Math.floor((wordCount / elapsedTimeInSeconds) * 60);
+            wpmDisplay.textContent = "WPM: " + wpm;
+
+            const currentTime = Date.now();
+            if (wpm !== lastWpm && (currentTime - lastSpokenTime) > cooldownPeriod) {
+                let message = getRandomMessage();
+
+                if (message && message !== lastMessage) {
+                    playAudioMessage(message);
+                    lastMessage = message;
+                    lastSpokenTime = currentTime;
+                }
+            }
+
+            lastWpm = wpm;
+        }
+    }
+
+    function reset() {
+        inputText.value = '';
+        wordCount = 0;
+        startTime = null;
+        lastWpm = 0;
+        lastMessage = null;
+        playedMessages = [];
+        wpmDisplay.textContent = "WPM: 0";
+    }
+
+    function playAudioMessage(message) {
+        let audioFile = audioFiles[message];
+
+        const audio = new Audio(audioFile);
+        audio.play();
+
+        playedMessages.push(message);
+
+        if (playedMessages.length === messages.length) {
+            playedMessages = [];
+        }
+    }
+
+    function getRandomMessage() {
+        const remainingMessages = messages.filter(message => !playedMessages.includes(message));
+
+        if (remainingMessages.length > 0) {
+            const randomIndex = Math.floor(Math.random() * remainingMessages.length);
+            return remainingMessages[randomIndex];
+        }
+
+        playedMessages = [];
+        return messages[Math.floor(Math.random() * messages.length)];
+    }
+</script>
+
+</body>
+</html>
